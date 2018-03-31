@@ -11,20 +11,19 @@
   <v-ons-page>
     <navbar></navbar>
   <div class="page-content">
-    <h3 class="page-title"> Today's Weather </h3>
+    <p class="page-title"> おにくの画像を点数化します </p>
+    <img style="width:100%;" v-show="meatImage" :src="meatImage" />
+    <input style="margin-left:20px;" type="file" v-on:change="upload($event.target.files)" accept="image/*" />
     <loading-indicator :is-loading="isLoading"></loading-indicator>
-    <v-ons-card v-if="isLoading==false">
-      <div class="title">{{today.weather[0].main}}</div>
-      <div>temp_max：{{today.main.temp_max}}</div>
-      <div>temp_min：{{today.main.temp_min}}</div>
-    </v-ons-card>
+    <br>
+    <h2 style="text-align:center;">{{rounded}}</h2>
   </div>
   </v-ons-page>
 </template>
 
 <script>
+import axios from 'axios';
 import LoadingIndicator from '../../components/loading-indicator/LoadingIndicator';
-import PostService from '../../services/PostService';
 import Navbar from '../../components/navbar/Navbar';
 import Config from '../../config/Config';
 
@@ -37,16 +36,40 @@ export default {
   data() {
     return {
       config: Config,
-      isLoading: true,
-      today: {},
+      isLoading: false,
+      result: {},
+      meatImage: '',
     };
   },
-  mounted() {
-    this.isLoading = true;
-    PostService.getPosts().then((response) => {
-      this.today = response.list[0];
-      this.isLoading = false;
-    });
+  methods: {
+    upload(file) {
+      const apiURL = 'https://api.a3rt.recruit-tech.co.jp/image_influence/v1/meat_score';
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      };
+
+      const formData = new FormData();
+      formData.append('imagefile', file[0]);
+      formData.append('apikey', 'pecUAOmUgV8vOCyIAtrMn5OH45fIg15q');
+      formData.append('predict', 1);
+      this.isLoading = true;
+      this.meatImage = window.URL.createObjectURL(file[0]);
+
+      axios.post(apiURL, formData, config)
+      .then((res) => {
+        this.isLoading = false;
+        this.result = res.data.result;
+        console.log(res);
+      })
+      .catch(err => console.log(err));
+    },
+  },
+  computed: {
+    rounded() {
+      return this.result.score == null ? null : `${Math.round(this.result.score) + 1}/10点`;
+    },
   },
 };
 </script>

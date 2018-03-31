@@ -28,7 +28,7 @@ export default {
   name: 'navbar',
   data() {
     return {
-      msg: 'OpenWeatherMap',
+      msg: 'おにく判定',
     };
   },
   methods: {
